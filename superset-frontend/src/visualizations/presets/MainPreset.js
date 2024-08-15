@@ -64,6 +64,7 @@ import {
   EchartsSankeyChartPlugin,
   EchartsTreemapChartPlugin,
   EchartsMixedTimeseriesChartPlugin,
+  EchartsXcontrolChartPlugin,
   EchartsTreeChartPlugin,
   EchartsSunburstChartPlugin,
   EchartsBubbleChartPlugin,
@@ -120,6 +121,9 @@ export default class MainPreset extends Preset {
         new EchartsRadarChartPlugin().configure({ key: 'radar' }),
         new EchartsMixedTimeseriesChartPlugin().configure({
           key: 'mixed_timeseries',
+        }),
+        new EchartsXcontrolChartPlugin().configure({
+          key: 'xcontrol',
         }),
         new HeatmapChartPlugin().configure({ key: 'heatmap' }),
         new HistogramChartPlugin().configure({ key: 'histogram' }),

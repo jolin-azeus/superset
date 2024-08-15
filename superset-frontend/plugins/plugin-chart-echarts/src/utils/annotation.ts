@@ -35,6 +35,7 @@ import {
 } from '@superset-ui/core';
 import { EchartsTimeseriesChartProps } from '../types';
 import { EchartsMixedTimeseriesProps } from '../MixedTimeseries/types';
+import { EchartsXcontrolProps } from '../Xcontrol/types';
 
 export function evalFormula(
   formula: FormulaAnnotationLayer,
@@ -142,7 +143,7 @@ export function extractAnnotationLabels(
 }
 
 export function getAnnotationData(
-  chartProps: EchartsTimeseriesChartProps | EchartsMixedTimeseriesProps,
+  chartProps: EchartsTimeseriesChartProps | EchartsMixedTimeseriesProps | EchartsXcontrolProps,
 ): AnnotationData {
   const data = chartProps?.queriesData[0]?.annotation_data as AnnotationData;
   if (!isEmpty(data)) {

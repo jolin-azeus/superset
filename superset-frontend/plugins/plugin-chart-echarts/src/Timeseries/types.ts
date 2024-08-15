@@ -111,3 +111,7 @@ export type TimeseriesChartTransformedProps =
       };
       onFocusedSeries: (series: string | null) => void;
     };
+
+export const isValidNumber = (value: unknown): value is number => {
+  return typeof value === "number" && value != null && !Number.isNaN(value);
+};
