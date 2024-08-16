@@ -22,21 +22,23 @@ import {
   normalizeOrderBy,
   PostProcessingPivot,
   QueryFormData,
-  QueryFormMetric,
   QueryObject,
   isXAxisSet,
   getXAxisColumn,
 } from '@superset-ui/core';
 import {
+  extractExtraMetrics,
   pivotOperator,
   renameOperator,
   flattenOperator,
   isTimeComparison,
   timeComparePivotOperator,
   rollingWindowOperator,
+  sortOperator,
   timeCompareOperator,
   resampleOperator,
 } from '@superset-ui/chart-controls';
+import { xcontorlDebug } from '../types';
 
 export default function buildQuery(formData: QueryFormData) {
   const fd = {
@@ -45,7 +47,10 @@ export default function buildQuery(formData: QueryFormData) {
 
   const queryContexts = buildQueryContext(fd, baseQueryObject => {
 
-      const extra_metrics: QueryFormMetric[] = [];
+      // only add series limit metric if it's explicitly needed e.g. for sorting
+      const extra_metrics = extractExtraMetrics(formData);
+
+      // also add metrics for goal lines of Xcontrol chart
       extra_metrics.push({
           expressionType: "SQL",
           sqlExpression: "MIN(\"CL\"+\"STDDEV\"*3)",
@@ -104,6 +109,7 @@ export default function buildQuery(formData: QueryFormData) {
         series_columns: fd.groupby,
         ...(isXAxisSet(formData) ? {} : { is_timeseries: true }),
       };
+      xcontorlDebug("queryObject", queryObject);
 
       const pivotOperatorInRuntime: PostProcessingPivot = isTimeComparison(
         fd,
@@ -121,10 +127,14 @@ export default function buildQuery(formData: QueryFormData) {
           timeCompareOperator(fd, queryObject),
           resampleOperator(fd, queryObject),
           renameOperator(fd, queryObject),
+          sortOperator(fd, queryObject),
           flattenOperator(fd, queryObject),
         ],
       } as QueryObject;
-      return [normalizeOrderBy(tmpQueryObject)];
+      xcontorlDebug("tmpQueryObject", tmpQueryObject);
+      const normalizeOrderByQueryObject = normalizeOrderBy(tmpQueryObject);
+      xcontorlDebug("normalizeOrderByQueryObject", normalizeOrderByQueryObject);
+      return [normalizeOrderByQueryObject];
   });
   
   return {

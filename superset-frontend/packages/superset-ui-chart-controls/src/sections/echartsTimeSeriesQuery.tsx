@@ -40,6 +40,14 @@ const controlsWithoutXAxis: ControlSetRow[] = [
   ['show_empty_columns'],
 ];
 
+export const controlsXAxisSort: ControlSetRow[] = [
+  [xAxisForceCategoricalControl],
+  [xAxisSortControl],
+  [xAxisSortAscControl],
+  [xAxisSortSeriesControl],
+  [xAxisSortSeriesAscendingControl],
+];
+
 export const echartsTimeSeriesQuery: ControlPanelSectionConfig = {
   label: t('Query'),
   expanded: true,

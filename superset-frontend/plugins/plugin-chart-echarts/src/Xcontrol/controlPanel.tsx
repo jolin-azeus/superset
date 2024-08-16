@@ -16,14 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { ensureIsArray, t } from '@superset-ui/core';
-import { cloneDeep } from 'lodash';
+import { t } from '@superset-ui/core';
 import {
   ControlPanelConfig,
+  ControlPanelsContainerProps,
   ControlPanelSectionConfig,
   ControlSetRow,
   ControlSubSectionHeader,
-  CustomControlItem,
   getStandardizedControls,
   sections,
   sharedControls,
@@ -58,46 +57,47 @@ const {
 } = DEFAULT_FORM_DATA;
 
 function createQuerySection(
-  label: string,
-  controlSuffix: string,
 ): ControlPanelSectionConfig {
   return {
-    label,
+    label: t('Query'),
     expanded: true,
     controlSetRows: [
+      ['x_axis'], /* X-axis */
+      ['time_grain_sqla'],
+      ...sections.controlsXAxisSort,
       [
         {
-          name: `metrics${controlSuffix}`, /* Metrics */
+          name: 'metrics', /* Metrics */
           config: sharedControls.metrics,
         },
       ],
       [
         {
-          name: `groupby${controlSuffix}`, /* Dimensions */
+          name: 'groupby', /* Dimensions */
           config: sharedControls.groupby,
         },
       ],
       [
         {
-          name: `adhoc_filters${controlSuffix}`, /* Filters */
+          name: 'adhoc_filters', /* Filters */
           config: sharedControls.adhoc_filters,
         },
       ],
       [
         {
-          name: `limit${controlSuffix}`, /* Series limit */
+          name: 'limit', /* Series limit */
           config: sharedControls.limit,
         },
       ],
       [
         {
-          name: `timeseries_limit_metric${controlSuffix}`, /* Sort by */
+          name: 'timeseries_limit_metric', /* Sort by */
           config: sharedControls.timeseries_limit_metric,
         },
       ],
       [
         {
-          name: `order_desc${controlSuffix}`, /* Sort Descending */
+          name: 'order_desc', /* Sort Descending */
           config: {
             type: 'CheckboxControl',
             label: t('Sort Descending'),
@@ -108,7 +108,7 @@ function createQuerySection(
       ],
       [
         {
-          name: `row_limit${controlSuffix}`, /* Row limit */
+          name: 'row_limit', /* Row limit */
           config: {
             ...sharedControls.row_limit,
             default: rowLimit,
@@ -117,7 +117,7 @@ function createQuerySection(
       ],
       [
         {
-          name: `truncate_metric${controlSuffix}`, /* Truncate Metric */
+          name: 'truncate_metric', /* Truncate Metric */
           config: {
             ...sharedControls.truncate_metric,
             default: sharedControls.truncate_metric.default,
@@ -129,14 +129,11 @@ function createQuerySection(
 }
 
 function createCustomizeSection(
-  label: string,
-  controlSuffix: string,
 ): ControlSetRow[] {
   return [
-    [<ControlSubSectionHeader>{label}</ControlSubSectionHeader>],
     [
       {
-        name: `seriesType${controlSuffix}`,
+        name: 'seriesType',
         config: {
           type: 'SelectControl',
           label: t('Series type'),
@@ -157,7 +154,7 @@ function createCustomizeSection(
     ],
     [
       {
-        name: `stack${controlSuffix}`,
+        name: 'stack',
         config: {
           type: 'CheckboxControl',
           label: t('Stack series'),
@@ -169,7 +166,7 @@ function createCustomizeSection(
     ],
     [
       {
-        name: `area${controlSuffix}`,
+        name: 'area',
         config: {
           type: 'CheckboxControl',
           label: t('Area chart'),
@@ -183,7 +180,24 @@ function createCustomizeSection(
     ],
     [
       {
-        name: `show_value${controlSuffix}`,
+        name: 'opacity',
+        config: {
+          type: 'SliderControl',
+          label: t('Area chart opacity'),
+          renderTrigger: true,
+          min: 0,
+          max: 1,
+          step: 0.1,
+          default: opacity,
+          description: t('Opacity of area chart.'),
+          visibility: ({ controls }: ControlPanelsContainerProps) =>
+            Boolean(controls?.area?.value),
+        },
+      },
+    ],
+    [
+      {
+        name: 'show_value',
         config: {
           type: 'CheckboxControl',
           label: t('Show Values'),
@@ -197,22 +211,7 @@ function createCustomizeSection(
     ],
     [
       {
-        name: `opacity${controlSuffix}`,
-        config: {
-          type: 'SliderControl',
-          label: t('Opacity'),
-          renderTrigger: true,
-          min: 0,
-          max: 1,
-          step: 0.1,
-          default: opacity,
-          description: t('Opacity of area chart.'),
-        },
-      },
-    ],
-    [
-      {
-        name: `markerEnabled${controlSuffix}`,
+        name: 'markerEnabled',
         config: {
           type: 'CheckboxControl',
           label: t('Marker'),
@@ -226,52 +225,29 @@ function createCustomizeSection(
     ],
     [
       {
-        name: `markerSize${controlSuffix}`,
+        name: 'markerSize',
         config: {
           type: 'SliderControl',
           label: t('Marker size'),
           renderTrigger: true,
           min: 0,
-          max: 100,
+          max: 20,
           default: markerSize,
           description: t(
             'Size of marker. Also applies to forecast observations.',
           ),
+          visibility: ({ controls }: ControlPanelsContainerProps) =>
+            Boolean(controls?.markerEnabled?.value),
         },
       },
     ],
   ];
 }
 
-function createAdvancedAnalyticsSection(
-  label: string,
-  controlSuffix: string,
-): ControlPanelSectionConfig {
-  const aaWithSuffix = cloneDeep(sections.advancedAnalyticsControls);
-  aaWithSuffix.label = label;
-  if (!controlSuffix) {
-    return aaWithSuffix;
-  }
-  aaWithSuffix.controlSetRows.forEach(row =>
-    row.forEach((control: CustomControlItem) => {
-      if (control?.name) {
-        // eslint-disable-next-line no-param-reassign
-        control.name = `${control.name}${controlSuffix}`;
-      }
-    }),
-  );
-  return aaWithSuffix;
-}
-
 const config: ControlPanelConfig = {
   controlPanelSections: [
-    {
-      label: t('Query fields'),
-      expanded: true,
-      controlSetRows: [['x_axis'], ['time_grain_sqla']], /* X-axis */
-    },
-    createQuerySection(t('Query'), ''),
-    createAdvancedAnalyticsSection(t('Advanced analytics Query'), ''),
+    createQuerySection(),
+    sections.advancedAnalyticsControls,
     sections.annotationsAndLayersControls,
     sections.titleControls,
     {
@@ -279,7 +255,7 @@ const config: ControlPanelConfig = {
       expanded: true,
       controlSetRows: [
         ['color_scheme'],
-        ...createCustomizeSection(t('Query'), ''),
+        ...createCustomizeSection(),
         [
           {
             name: 'zoomable',
@@ -300,6 +276,16 @@ const config: ControlPanelConfig = {
         ...richTooltipSection,
         // eslint-disable-next-line react/jsx-key
         [<ControlSubSectionHeader>{t('Y Axis')}</ControlSubSectionHeader>],
+        [
+          {
+            name: `y_axis_format`,
+            config: {
+              ...sharedControls.y_axis_format,
+              label: t('y-axis format'),
+            },
+          },
+        ],
+        ['currency_format'],
         [
           {
             name: 'minorSplitLine',
@@ -333,7 +319,7 @@ const config: ControlPanelConfig = {
             name: 'y_axis_bounds',
             config: {
               type: 'BoundsControl',
-              label: t('y-axis Bounds'),
+              label: t('Y Axis Bounds'),
               renderTrigger: true,
               default: yAxisBounds,
               description: t(
@@ -342,19 +328,11 @@ const config: ControlPanelConfig = {
                   "this feature will only expand the axis range. It won't " +
                   "narrow the data's extent.",
               ),
+              visibility: ({ controls }: ControlPanelsContainerProps) =>
+                Boolean(controls?.truncateYAxis?.value),
             },
           },
         ],
-        [
-          {
-            name: `y_axis_format`,
-            config: {
-              ...sharedControls.y_axis_format,
-              label: t('y-axis format'),
-            },
-          },
-        ],
-        ['currency_format'],
         [
           {
             name: 'logAxis',
@@ -370,29 +348,11 @@ const config: ControlPanelConfig = {
       ],
     },
   ],
-  formDataOverrides: formData => {
-    const groupby = getStandardizedControls().controls.columns.filter(
-      col => !ensureIsArray(formData.groupby_b).includes(col),
-    );
-    getStandardizedControls().controls.columns =
-      getStandardizedControls().controls.columns.filter(
-        col => !groupby.includes(col),
-      );
-
-    const metrics = getStandardizedControls().controls.metrics.filter(
-      metric => !ensureIsArray(formData.metrics_b).includes(metric),
-    );
-    getStandardizedControls().controls.metrics =
-      getStandardizedControls().controls.metrics.filter(
-        col => !metrics.includes(col),
-      );
-
-    return {
-      ...formData,
-      metrics,
-      groupby,
-    };
-  },
+  formDataOverrides: formData => ({
+    ...formData,
+    metrics: getStandardizedControls().popAllMetrics(),
+    groupby: getStandardizedControls().popAllColumns(),
+  }),
 };
 
 export default config;

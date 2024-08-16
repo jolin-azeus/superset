@@ -27,6 +27,7 @@ import {
   ensureIsArray,
   GenericDataType,
   getCustomFormatter,
+  getMetricLabel,
   getNumberFormatter,
   getXAxisLabel,
   isDefined,
@@ -43,7 +44,10 @@ import {
   tooltipHtml,
   ValueFormatter,
 } from '@superset-ui/core';
-import { getOriginalSeries } from '@superset-ui/chart-controls';
+import {
+  extractExtraMetrics,
+  getOriginalSeries
+} from '@superset-ui/chart-controls';
 import { EChartsCoreOption, SeriesOption } from 'echarts';
 import {
   DEFAULT_FORM_DATA,
@@ -55,6 +59,7 @@ import {
   EchartsTimeseriesSeriesType,
   ForecastSeriesEnum,
   Refs,
+  xcontorlDebug,
 } from '../types';
 import { parseAxisBound } from '../utils/controls';
 import {
@@ -128,6 +133,7 @@ export default function transformProps(
     inContextMenu,
     emitCrossFilters,
   } = chartProps;
+  xcontorlDebug("queriesData", queriesData);
 
   let focusedSeries: string | null = null;
 
@@ -201,11 +207,22 @@ export default function transformProps(
     xAxisLabel = verboseMap[xAxisLabel];
   }
 
+  xcontorlDebug("data1", data1);
   const rebasedDataA = rebaseForecastDatum(data1, verboseMap);
-  const [rawSeriesA] = extractSeries(rebasedDataA, {
-    fillNeighborValue: stack ? 0 : undefined,
-    xAxis: xAxisLabel,
-  });
+  xcontorlDebug("rebasedDataA", rebasedDataA);
+
+  const extraMetricLabels = extractExtraMetrics(chartProps.rawFormData).map(
+    getMetricLabel,
+  );
+
+  const [rawSeriesA] = extractSeries(
+    rebasedDataA,
+    {
+      fillNeighborValue: stack ? 0 : undefined,
+      xAxis: xAxisLabel,
+      extraMetricLabels,
+    }
+  );
 
   const dataTypes = getColtypesMapping(queriesData[0]);
   const xAxisDataType = dataTypes?.[xAxisLabel] ?? dataTypes?.[xAxisOrig];
@@ -307,6 +324,7 @@ export default function transformProps(
   const array = ensureIsArray(chartProps.rawFormData?.time_compare);
   const inverted = invert(verboseMap);
 
+  xcontorlDebug("rawSeriesA", rawSeriesA);
   rawSeriesA.forEach(entry => {
     const entryName = String(entry.name || '');
     const seriesName = inverted[entryName] || entryName;
