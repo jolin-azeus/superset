@@ -62,7 +62,7 @@ export const DEFAULT_FORM_DATA: EchartsTimeseriesFormData = {
   forecastSeasonalityYearly:
     sections.FORECAST_DEFAULT_DATA.forecastSeasonalityYearly,
   logAxis: false,
-  markerEnabled: false,
+  markerEnabled: true,
   markerSize: 6,
   minorSplitLine: false,
   opacity: 0.2,
@@ -79,7 +79,7 @@ export const DEFAULT_FORM_DATA: EchartsTimeseriesFormData = {
   xAxisForceCategorical: false,
   xAxisLabelRotation: defaultXAxis.xAxisLabelRotation,
   groupby: [],
-  showValue: false,
+  showValue: true,
   onlyTotal: false,
   percentageThreshold: 0,
   orientation: OrientationType.Vertical,

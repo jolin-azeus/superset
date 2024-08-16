@@ -52,6 +52,7 @@ import { extractForecastSeriesContext } from '../utils/forecast';
 import {
   EchartsTimeseriesSeriesType,
   ForecastSeriesEnum,
+  isValidNumber,
   LegendOrientation,
   StackType,
 } from '../types';
@@ -153,6 +154,7 @@ export function transformSeries(
     stack?: StackType;
     stackIdSuffix?: string;
     yAxisIndex?: number;
+    xcontrolShowCustom?: boolean;
     showValue?: boolean;
     onlyTotal?: boolean;
     legendState?: LegendState;
@@ -168,8 +170,10 @@ export function transformSeries(
     queryIndex?: number;
     timeCompare?: string[];
   },
+  data?: TimeseriesDataRecord[],
 ): SeriesOption | undefined {
   const { name } = series;
+  const rebasedData = data || [];
   const {
     area,
     connectNulls,
@@ -182,6 +186,7 @@ export function transformSeries(
     stack,
     stackIdSuffix,
     yAxisIndex = 0,
+    xcontrolShowCustom = false,
     showValue,
     onlyTotal,
     formatter,
@@ -248,8 +253,56 @@ export function transformSeries(
   };
   let emphasis = {};
   let showSymbol = false;
+  const symbol = (value: Array<Object>|number, params: Object) => {
+    if (xcontrolShowCustom) {
+      if (value && params && params["seriesId"] && rebasedData.length) {
+        const seriesId = params["seriesId"];
+        if (seriesId === "CL" || seriesId === "UCL" || seriesId === "LCL" ||
+            seriesId === "UCLA" || seriesId === "UCLB" ||
+            seriesId === "LCLA" || seriesId === "LCLB") {
+          return 'none';
+        }
+        const valDatapoint = Number(value[1]);
+        const valUCL = Number(rebasedData[0]["UCL"]);
+        const valLCL = Number(rebasedData[0]["LCL"]);
+        if (isValidNumber(valDatapoint) && isValidNumber(valUCL) && isValidNumber(valLCL)) {
+          if (valDatapoint > valUCL || valDatapoint < valLCL) {
+            //"red"
+            return 'image://data:image/gif;base64,R0lGODlhIAAgAPcAAAAAAAAAMwAAZgAAmQAAzAAA/wArAAArMwArZgArmQArzAAr/wBVAABVMwBVZgBVmQBVzABV/wCAAACAMwCAZgCAmQCAzACA/wCqAACqMwCqZgCqmQCqzACq/wDVAADVMwDVZgDVmQDVzADV/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMrADMrMzMrZjMrmTMrzDMr/zNVADNVMzNVZjNVmTNVzDNV/zOAADOAMzOAZjOAmTOAzDOA/zOqADOqMzOqZjOqmTOqzDOq/zPVADPVMzPVZjPVmTPVzDPV/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YrAGYrM2YrZmYrmWYrzGYr/2ZVAGZVM2ZVZmZVmWZVzGZV/2aAAGaAM2aAZmaAmWaAzGaA/2aqAGaqM2aqZmaqmWaqzGaq/2bVAGbVM2bVZmbVmWbVzGbV/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5krAJkrM5krZpkrmZkrzJkr/5lVAJlVM5lVZplVmZlVzJlV/5mAAJmAM5mAZpmAmZmAzJmA/5mqAJmqM5mqZpmqmZmqzJmq/5nVAJnVM5nVZpnVmZnVzJnV/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wrAMwrM8wrZswrmcwrzMwr/8xVAMxVM8xVZsxVmcxVzMxV/8yAAMyAM8yAZsyAmcyAzMyA/8yqAMyqM8yqZsyqmcyqzMyq/8zVAMzVM8zVZszVmczVzMzV/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8rAP8rM/8rZv8rmf8rzP8r//9VAP9VM/9VZv9Vmf9VzP9V//+AAP+AM/+AZv+Amf+AzP+A//+qAP+qM/+qZv+qmf+qzP+q///VAP/VM//VZv/Vmf/VzP/V////AP//M///Zv//mf//zP///wAAAAAAAAAAAAAAACH5BAEAAPwALAAAAAAgACAAAAj/APcJHEhQILZp2aS9mnawoMOHAxmmyvZKYcJX2VBlmwYR4jRX2SZim2hRY8Zsrjh2jJgS5bRX2BaeDJntIraV+z7WbKkRIciQ2E6+VPnwI0KTGisuTDmS4sigqIr+XNj0YkKKOi1aJCpQq9KTSIFulNkTZNSBNTWKnLjzZdBUTytSdJmNJUK5cI0CdVsTLlWfDAVOZEoV49KNICeaZLgUYSqDL4FShUuzZUmsiVHWFWtSGtaTBxfCJIk3qFGJaSl6bjk428HUqlVTBdn45ES/oT/6NTra9UKEFuXCZHy0pmPTIIt//Oq5NNnUyZMzx+hWMdaYOnl73v0zafPXWmPrl6Q8HXVut9QTxxSKHbtTmkmD7gO6u6nPvTJ5apbYdSxxl/nFppZp9NU1n0btKXWQdM3NBJdfCQ0kmkJ3ASacZ81ZNJY0BCn0GkgKhYcXgJ5ppFBBkfU03ElfteTaRDC98pBQvWHUFIUACtWRS6Ft1xaJVuGEFUz0hXajYRzitI+HbkWW134pKUmQUCA6ZZ2UEIlmn4ErBQQAOw==';
+          } else {
+            //"black"
+            return 'image://data:image/gif;base64,R0lGODlhIAAgAHAAACH5BAEAAPwALAAAAAAgACAAhwAAAAAAMwAAZgAAmQAAzAAA/wArAAArMwArZgArmQArzAAr/wBVAABVMwBVZgBVmQBVzABV/wCAAACAMwCAZgCAmQCAzACA/wCqAACqMwCqZgCqmQCqzACq/wDVAADVMwDVZgDVmQDVzADV/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMrADMrMzMrZjMrmTMrzDMr/zNVADNVMzNVZjNVmTNVzDNV/zOAADOAMzOAZjOAmTOAzDOA/zOqADOqMzOqZjOqmTOqzDOq/zPVADPVMzPVZjPVmTPVzDPV/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YrAGYrM2YrZmYrmWYrzGYr/2ZVAGZVM2ZVZmZVmWZVzGZV/2aAAGaAM2aAZmaAmWaAzGaA/2aqAGaqM2aqZmaqmWaqzGaq/2bVAGbVM2bVZmbVmWbVzGbV/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5krAJkrM5krZpkrmZkrzJkr/5lVAJlVM5lVZplVmZlVzJlV/5mAAJmAM5mAZpmAmZmAzJmA/5mqAJmqM5mqZpmqmZmqzJmq/5nVAJnVM5nVZpnVmZnVzJnV/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wrAMwrM8wrZswrmcwrzMwr/8xVAMxVM8xVZsxVmcxVzMxV/8yAAMyAM8yAZsyAmcyAzMyA/8yqAMyqM8yqZsyqmcyqzMyq/8zVAMzVM8zVZszVmczVzMzV/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8rAP8rM/8rZv8rmf8rzP8r//9VAP9VM/9VZv9Vmf9VzP9V//+AAP+AM/+AZv+Amf+AzP+A//+qAP+qM/+qZv+qmf+qzP+q///VAP/VM//VZv/Vmf/VzP/V////AP//M///Zv//mf//zP///wAAAAAAAAAAAAAAAAhnAPcJHEhQIICDCA8WXMhwYMKHDxs2hEgxokSHFTMqvKixIwCJHj0yDBmyIEmSBE+WNKhyZUuXLzvui0mzps2bOHPq3Mmz5syeLHkG3YlRZ0qiR3GOvAnSJ8eYF4uejGpyJdWlEKkGBAA7';
+          }
+        }
+      }
+    }
+    return 'emptyCircle';
+  };
+  let customLineStyle: LineStyleOption = {};
+  let customShowValue: boolean = true;
   if (!isConfidenceBand) {
-    if (plotType === 'scatter') {
+    if (xcontrolShowCustom) {
+      if (series.id === "CL") {
+        showSymbol = false;
+        customLineStyle.type = "dashed";
+        customLineStyle.color = "blue";
+        customLineStyle.width = 1;
+        customShowValue = false;
+      } else if (series.id === "UCL" || series.id === "LCL") {
+        showSymbol = false;
+        customLineStyle.type = "dashed";
+        customLineStyle.color = "red";
+        customLineStyle.width = 1;
+        customShowValue = false;
+      } else if (series.id === "UCLA" || series.id === "UCLB" ||
+                 series.id === "LCLA" || series.id === "LCLB") {
+        showSymbol = false;
+        customLineStyle.type = "dashed";
+        customLineStyle.color = "black";
+        customLineStyle.width = 1;
+        customShowValue = false;
+      }
+    } if (plotType === 'scatter') {
       showSymbol = true;
     } else if (hasForecast && isObservation) {
       showSymbol = true;
@@ -269,15 +322,17 @@ export function transformSeries(
       showSymbol = true;
     }
   }
-  const lineStyle =
+  const lineStyleTemp =
     isConfidenceBand || (stack === StackControlsValue.Stream && area)
       ? { ...opts.lineStyle, opacity: OpacityEnum.Transparent }
       : { ...opts.lineStyle, opacity };
+  const lineStyle = { ...customLineStyle, ...lineStyleTemp };
   return {
     ...series,
     connectNulls,
     queryIndex,
     yAxisIndex,
+    xcontrolShowCustom,
     name: forecastSeries.name,
     itemStyle,
     // @ts-ignore
@@ -310,9 +365,10 @@ export function transformSeries(
       ...emphasis,
     },
     showSymbol,
+    symbol,
     symbolSize: markerSize,
     label: {
-      show: !!showValue,
+      show: !!showValue && customShowValue,
       position: isHorizontal ? 'right' : 'top',
       formatter: (params: any) => {
         const { value, dataIndex, seriesIndex, seriesName } = params;

@@ -25,6 +25,7 @@ export { default as EchartsTimeseriesScatterChartPlugin } from './Timeseries/Reg
 export { default as EchartsTimeseriesSmoothLineChartPlugin } from './Timeseries/Regular/SmoothLine';
 export { default as EchartsTimeseriesStepChartPlugin } from './Timeseries/Step';
 export { default as EchartsMixedTimeseriesChartPlugin } from './MixedTimeseries';
+export { default as EchartsXcontrolChartPlugin } from './Xcontrol';
 export { default as EchartsPieChartPlugin } from './Pie';
 export { default as EchartsGraphChartPlugin } from './Graph';
 export { default as EchartsGaugeChartPlugin } from './Gauge';
@@ -49,6 +50,7 @@ export { default as FunnelTransformProps } from './Funnel/transformProps';
 export { default as GaugeTransformProps } from './Gauge/transformProps';
 export { default as GraphTransformProps } from './Graph/transformProps';
 export { default as MixedTimeseriesTransformProps } from './MixedTimeseries/transformProps';
+export { default as XcontrolTransformProps } from './Xcontrol/transformProps';
 export { default as PieTransformProps } from './Pie/transformProps';
 export { default as RadarTransformProps } from './Radar/transformProps';
 export { default as TimeseriesTransformProps } from './Timeseries/transformProps';

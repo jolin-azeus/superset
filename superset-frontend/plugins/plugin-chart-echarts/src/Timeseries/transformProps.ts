@@ -54,6 +54,7 @@ import {
   EchartsTimeseriesFormData,
   OrientationType,
   TimeseriesChartTransformedProps,
+  xcontorlDebug,
 } from './types';
 import { DEFAULT_FORM_DATA } from './constants';
 import { ForecastSeriesEnum, ForecastValue, Refs } from '../types';
@@ -200,6 +201,7 @@ export default function transformProps(
   }, {});
 
   const colorScale = CategoricalColorNamespace.getScale(colorScheme as string);
+  xcontorlDebug("data", data);
   const rebasedData = rebaseForecastDatum(data, verboseMap);
   let xAxisLabel = getXAxisLabel(chartProps.rawFormData) as string;
   if (
@@ -224,6 +226,7 @@ export default function transformProps(
 
   const isMultiSeries = groupBy.length || metrics?.length > 1;
 
+  xcontorlDebug("rebasedData", rebasedData);
   const [rawSeries, sortedTotalValues, minPositiveValue] = extractSeries(
     rebasedData,
     {
@@ -276,6 +279,7 @@ export default function transformProps(
 
   const offsetLineWidths = {};
 
+  xcontorlDebug("rawSeries", rawSeries);
   rawSeries.forEach(entry => {
     const derivedSeries = isDerivedSeries(entry, chartProps.rawFormData);
     const lineStyle: LineStyleOption = {};

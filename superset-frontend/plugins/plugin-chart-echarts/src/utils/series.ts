@@ -46,6 +46,7 @@ import {
   LegendOrientation,
   LegendType,
   StackType,
+  xcontorlDebug,
 } from '../types';
 import { defaultLegendPadding } from '../defaults';
 
@@ -138,6 +139,7 @@ export function sortAndFilterSeries(
   const seriesNames = Object.keys(rows[0])
     .filter(key => key !== xAxis)
     .filter(key => !extraMetricLabels.includes(key));
+  xcontorlDebug("seriesNames", seriesNames);
 
   let aggregator: (name: string) => { name: string; value: any };
 
@@ -284,6 +286,11 @@ export function extractSeries(
     ...datum,
     [xAxis]: datum[xAxis],
   }));
+  xcontorlDebug("rows", rows);
+  xcontorlDebug("xAxis", xAxis);
+  xcontorlDebug("extraMetricLabels", extraMetricLabels);
+  xcontorlDebug("sortSeriesType", sortSeriesType);
+  xcontorlDebug("sortSeriesAscending", sortSeriesAscending);
   const sortedSeries = sortAndFilterSeries(
     rows,
     xAxis,
@@ -306,6 +313,8 @@ export function extractSeries(
         }));
 
   let minPositiveValue: number | undefined;
+  xcontorlDebug("sortedSeries", sortedSeries);
+  xcontorlDebug("sortedRows", sortedRows);
   const finalSeries = sortedSeries.map(name => ({
     id: name,
     name,
@@ -339,6 +348,7 @@ export function extractSeries(
       .filter(obs => !removeNulls || (obs[0] !== null && obs[1] !== null))
       .map(obs => (isHorizontal ? [obs[1], obs[0]] : obs)),
   }));
+  xcontorlDebug("finalSeries", finalSeries);
   return [
     finalSeries,
     sortedRows.map(({ totalStackedValue }) => totalStackedValue),
